@@ -7,21 +7,12 @@ import {
   CardContent,
   Typography,
   CircularProgress,
-  Alert
+  Alert,
+  Chip,
+  Divider
 } from '@mui/material';
-import axios from 'axios';
-
-interface DetectionResult {
-  ip: string;
-  verdict: 'PROXY/VPN' | 'ORIGINAL';
-  score: number;
-  whois: Record<string, any>;
-  checks: Array<{
-    type: string;
-    result: boolean;
-    details?: string;
-  }>;
-}
+import vpnDetectionService from '../services/vpn-detection.service';
+import type { DetectionResult } from '../services/vpn-detection.service';
 
 const IPDetector: React.FC = () => {
   const [ip, setIp] = useState('');
@@ -35,8 +26,8 @@ const IPDetector: React.FC = () => {
     setError(null);
 
     try {
-      const response = await axios.post('http://localhost:5000/api/detect', { ip });
-      setResult(response.data);
+      const data = await vpnDetectionService.detectIP(ip);
+      setResult(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -45,9 +36,9 @@ const IPDetector: React.FC = () => {
   };
 
   return (
-    <Box sx={{ maxWidth: 600, mx: 'auto', mt: 4, p: 2 }}>
-      <Typography variant="h4" gutterBottom>
-        VPN & Proxy Detector
+    <Box sx={{ maxWidth: 700, mx: 'auto', mt: 3, p: 2, bgcolor: '#fafafa', minHeight: '100vh' }}>
+      <Typography variant="h5" gutterBottom sx={{ color: '#555', borderBottom: '2px solid #ddd', pb: 1 }}>
+        IP Detection
       </Typography>
 
       <form onSubmit={handleSubmit}>
@@ -79,34 +70,97 @@ const IPDetector: React.FC = () => {
       )}
 
       {result && (
-        <Card sx={{ mt: 4 }}>
-          <CardContent>
-            <Typography variant="h6" color={result.verdict === 'PROXY/VPN' ? 'error' : 'success'}>
-              Verdict: {result.verdict}
-            </Typography>
-            <Typography variant="body1" sx={{ mt: 2 }}>
-              Trust Score: {result.score}/100
+        <Card sx={{ mt: 3, border: '1px solid #ddd' }} elevation={0}>
+          <CardContent sx={{ bgcolor: '#f9f9f9' }}>
+            <Box sx={{ mb: 2 }}>
+              <Typography variant="h5" gutterBottom>
+                Detection Results
+              </Typography>
+            </Box>
+            
+            <Box sx={{ display: 'flex', gap: 2, mb: 2, flexWrap: 'wrap' }}>
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Verdict
+                </Typography>
+                <Chip
+                  label={result.verdict}
+                  color={result.verdict === 'PROXY/VPN' ? 'error' : 'success'}
+                  sx={{ mt: 1, fontWeight: 'bold' }}
+                />
+              </Box>
+              <Box>
+                <Typography variant="subtitle2" color="text.secondary">
+                  Threat Score
+                </Typography>
+                <Typography variant="h4" color={result.score > 50 ? 'error.main' : 'success.main'}>
+                  {result.score}/100
+                </Typography>
+              </Box>
+            </Box>
+            
+            {result.threatLevel && (
+              <Box sx={{ mb: 2 }}>
+                <Chip
+                  label={`Threat Level: ${result.threatLevel}`}
+                  color={result.threatLevel === 'HIGH' ? 'error' : result.threatLevel === 'MEDIUM' ? 'warning' : 'info'}
+                />
+              </Box>
+            )}
+
+            <Divider sx={{ my: 3 }} />
+
+            <Typography variant="h6" gutterBottom>
+              Detection Checks
             </Typography>
             {result.checks.map((check, index) => (
-              <Box key={index} sx={{ mt: 2 }}>
-                <Typography variant="subtitle2">
-                  {check.type}: {check.result ? '✓' : '✗'}
+              <Box key={index} sx={{ mt: 2, p: 2, bgcolor: 'background.default', borderRadius: 1 }}>
+                <Typography variant="subtitle2" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <span>{check.result ? '✓' : '✗'}</span>
+                  <strong>{check.type}</strong>
+                  {check.score && <Chip label={`Score: ${check.score}`} size="small" />}
                 </Typography>
                 {check.details && (
-                  <Typography variant="body2" color="text.secondary">
+                  <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
                     {check.details}
                   </Typography>
                 )}
+                {check.provider && (
+                  <Chip label={check.provider} size="small" sx={{ mt: 1 }} />
+                )}
               </Box>
             ))}
-            {result.whois && (
+
+            {result.analysis && (
               <Box sx={{ mt: 3 }}>
-                <Typography variant="h6">WHOIS Information</Typography>
-                <pre style={{ whiteSpace: 'pre-wrap' }}>
-                  {JSON.stringify(result.whois, null, 2)}
-                </pre>
+                <Typography variant="h6" gutterBottom>
+                  Analysis Summary
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                  {result.analysis.isVPN && <Chip label="VPN Detected" color="warning" />}
+                  {result.analysis.isProxy && <Chip label="Proxy Detected" color="warning" />}
+                  {result.analysis.isTor && <Chip label="Tor Network" color="error" />}
+                  {result.analysis.isHosting && <Chip label="Hosting/Datacenter" color="info" />}
+                </Box>
               </Box>
             )}
+
+            {result.whois && (
+              <Box sx={{ mt: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  WHOIS Information
+                </Typography>
+                <Box sx={{ bgcolor: 'background.default', p: 2, borderRadius: 1, overflow: 'auto' }}>
+                  <pre style={{ whiteSpace: 'pre-wrap', margin: 0 }}>
+                    {JSON.stringify(result.whois, null, 2)}
+                  </pre>
+                </Box>
+              </Box>
+            )}
+
+            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2 }}>
+              Analyzed at: {new Date(result.timestamp).toLocaleString()}
+            </Typography>
           </CardContent>
         </Card>
       )}

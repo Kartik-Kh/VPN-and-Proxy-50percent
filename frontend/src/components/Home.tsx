@@ -2,8 +2,6 @@ import { useState } from 'react';
 import {
   Box,
   Typography,
-  Card,
-  CardContent,
   TextField,
   Button,
   Container,
@@ -11,7 +9,6 @@ import {
   CircularProgress,
   Paper,
 } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
 import axios from 'axios';
 
 const Home = () => {
@@ -44,67 +41,54 @@ const Home = () => {
     <Box
       sx={{
         minHeight: '100vh',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: '#fafafa',
+        padding: 3,
+        pt: 12
       }}
     >
-      <Container maxWidth="lg" sx={{ py: 8 }}>
-        <Box textAlign="center" mb={6}>
+      <Container maxWidth="md">
+        <Box textAlign="center" mb={3}>
           <Typography
-            variant="h2"
+            variant="h4"
             gutterBottom
             sx={{
-              color: '#ffffff',
-              fontWeight: 700,
-              mb: 2,
-            }}
-          >
-            Proxy & VPN Detector
-          </Typography>
-          
-          <Typography
-            variant="h5"
-            sx={{
-              color: '#ffffff',
-              fontWeight: 600,
-              mb: 1,
-              textShadow: '0 2px 4px rgba(0,0,0,0.2)'
-            }}
-          >
-            Security & Bureau of Cyber Offenders
-          </Typography>
-          
-          <Typography
-            variant="h6"
-            sx={{
-              color: 'rgba(255, 255, 255, 0.9)',
+              color: '#555',
               fontWeight: 400,
             }}
           >
-            Law Enforcement Surveillance Solution - Detect Masked IPs & WHOIS Intelligence
+            IP Detection
+          </Typography>
+          
+          <Typography
+            variant="body2"
+            sx={{
+              color: '#999',
+              fontSize: '0.85rem'
+            }}
+          >
+            Basic IP analysis
           </Typography>
         </Box>
-
-        <Card
-          elevation={6}
+        <Paper
+          elevation={0}
           sx={{
-            maxWidth: 600,
+            maxWidth: 500,
             margin: 'auto',
-            mb: 6,
-            borderRadius: 3,
-            background: '#ffffff',
+            mb: 3,
+            border: '1px solid #ddd',
+            p: 3
           }}
         >
-              <CardContent sx={{ p: 4 }}>
                 <Typography 
-                  variant="h5" 
+                  variant="body1" 
                   gutterBottom
                   sx={{
-                    color: '#667eea',
-                    fontWeight: 600,
-                    mb: 3
+                    color: '#666',
+                    fontWeight: 500,
+                    mb: 2
                   }}
                 >
-                  IP Address Analysis (IPv4/IPv6)
+                  Enter IP Address
                 </Typography>
                 <Box
                   component="form"
@@ -121,44 +105,23 @@ const Home = () => {
                   <TextField
                     fullWidth
                     variant="outlined"
-                    placeholder="Enter IPv4/IPv6 address or domain (e.g., 8.8.8.8)"
+                    placeholder="e.g., 8.8.8.8"
                     value={ipAddress}
                     onChange={(e) => setIpAddress(e.target.value)}
-                    sx={{
-                      flex: 1,
-                      '& .MuiOutlinedInput-root': {
-                        '&:hover fieldset': {
-                          borderColor: '#667eea',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: '#667eea',
-                        },
-                      },
-                    }}
+                    size="small"
                   />
                   <Button
                     variant="contained"
-                    size="large"
+                    size="small"
                     type="submit"
                     disabled={loading || !ipAddress}
                     sx={{
-                      minWidth: { sm: '160px' },
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      color: 'white',
-                      fontWeight: 600,
-                      borderRadius: 2,
+                      minWidth: '120px',
                       textTransform: 'none',
-                      fontSize: '1rem',
-                      '&:hover': {
-                        background: 'linear-gradient(135deg, #764ba2 0%, #667eea 100%)',
-                      },
-                      '&.Mui-disabled': {
-                        background: '#e0e0e0',
-                      }
+                      bgcolor: '#1976d2'
                     }}
-                    startIcon={!loading && <SearchIcon />}
                   >
-                    {loading ? <CircularProgress size={24} color="inherit" /> : 'Analyze'}
+                    {loading ? <CircularProgress size={18} color="inherit" /> : 'Check IP'}
                   </Button>
                 </Box>
                 {error && (
@@ -175,101 +138,56 @@ const Home = () => {
                 {result && (
                   <Box sx={{ mt: 3 }}>
                     <Paper
-                      elevation={3}
+                      elevation={0}
                       sx={{
-                        p: 3,
-                        borderRadius: 3,
-                        background: result.verdict === 'PROXY/VPN' 
-                          ? 'linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%)'
-                          : 'linear-gradient(135deg, #81ecec 0%, #74b9ff 100%)',
+                        p: 2,
+                        border: '1px solid #ddd',
+                        background: '#fff',
                       }}
                     >
-                      <Box sx={{ textAlign: 'center', mb: 2 }}>
-                        <Typography
-                          variant="h4"
-                          sx={{ 
-                            fontWeight: 700,
-                            color: result.verdict === 'PROXY/VPN' ? '#d63031' : '#0984e3',
-                            mb: 1
-                          }}
-                        >
-                          {result.verdict === 'PROXY/VPN' ? '⚠️ VPN/Proxy Detected' : '✅ Clean IP'}
-                        </Typography>
-                        <Typography variant="h6" sx={{ color: '#2d3436' }}>
-                          Risk Score: <strong>{result.score}/100</strong>
-                        </Typography>
-                      </Box>
+                      <Typography
+                        variant="body1"
+                        sx={{ 
+                          fontWeight: 500,
+                          color: '#555',
+                          mb: 1
+                        }}
+                      >
+                        Result: {result.verdict === 'PROXY/VPN' ? 'VPN/Proxy' : 'Clean'}
+                      </Typography>
+                      <Typography variant="body2" sx={{ color: '#666' }}>
+                        Score: {result.score}/100
+                      </Typography>
 
-                      <Box sx={{ 
-                        bgcolor: 'rgba(255, 255, 255, 0.9)',
-                        p: 2,
-                        borderRadius: 2,
-                        mt: 2
-                      }}>
-                        <Typography variant="body1" sx={{ mb: 1 }}>
-                          <strong>IP Address:</strong> {result.ip || ipAddress}
+                      <Box sx={{ mt: 2, pt: 2, borderTop: '1px solid #eee' }}>
+                        <Typography variant="caption" sx={{ display: 'block', color: '#666', mb: 0.5 }}>
+                          IP: {result.ip || ipAddress}
                         </Typography>
                         
-                        {result.threatLevel && (
-                          <Typography variant="body1" sx={{ mb: 1 }}>
-                            <strong>Threat Level:</strong> <span style={{ 
-                              color: result.threatLevel === 'HIGH' ? '#d63031' : 
-                                     result.threatLevel === 'MEDIUM' ? '#e17055' : 
-                                     result.threatLevel === 'LOW' ? '#fdcb6e' : '#00b894'
-                            }}>{result.threatLevel}</span>
+                        {result.whois?.parsed?.organization && (
+                          <Typography variant="caption" sx={{ display: 'block', color: '#666' }}>
+                            Network: {result.whois.parsed.organization}
                           </Typography>
                         )}
                         
-                        {result.whois?.parsed && (
-                          <Box sx={{ mt: 2, p: 2, bgcolor: '#f8f9fa', borderRadius: 1 }}>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: '#2d3436' }}>
-                              📋 WHOIS Records:
-                            </Typography>
-                            {result.whois.parsed.organization && (
-                              <Typography variant="body2" sx={{ ml: 1, color: '#2d3436' }}>
-                                <strong>Organization:</strong> {result.whois.parsed.organization}
-                              </Typography>
-                            )}
-                            {result.whois.parsed.netname && (
-                              <Typography variant="body2" sx={{ ml: 1, color: '#2d3436' }}>
-                                <strong>Network:</strong> {result.whois.parsed.netname}
-                              </Typography>
-                            )}
-                            {result.whois.parsed.country && (
-                              <Typography variant="body2" sx={{ ml: 1, color: '#2d3436' }}>
-                                <strong>Country:</strong> {result.whois.parsed.country}
-                              </Typography>
-                            )}
-                            {result.whois.parsed.description && (
-                              <Typography variant="body2" sx={{ ml: 1, color: '#2d3436' }}>
-                                <strong>Description:</strong> {result.whois.parsed.description}
-                              </Typography>
-                            )}
-                          </Box>
-                        )}
-                        
                         {result.checks && result.checks.length > 0 && (
-                          <Box sx={{ mt: 2 }}>
-                            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1, color: '#636e72' }}>
-                              🔍 Detection Analysis:
+                          <Box sx={{ mt: 1 }}>
+                            <Typography variant="caption" sx={{ display: 'block', color: '#999', fontSize: '0.7rem' }}>
+                              {result.checks.length} checks performed
                             </Typography>
-                            {result.checks.map((check: any, index: number) => (
-                              <Typography 
-                                key={index} 
-                                variant="body2"
-                                sx={{ ml: 1, color: '#2d3436', mb: 0.5 }}
-                              >
-                                • <strong>{check.type}:</strong> {check.details || (check.result ? 'Detected' : 'Clean')}
-                              </Typography>
-                            ))}
                           </Box>
                         )}
                       </Box>
                     </Paper>
                   </Box>
                 )}
-              </CardContent>
-            </Card>
+              </Paper>
+            
+        <Box sx={{ mt: 3, textAlign: 'center' }}>
+          <Typography variant="caption" sx={{ color: '#aaa' }}>
+            Work in progress
+          </Typography>
+        </Box>
       </Container>
     </Box>
   );

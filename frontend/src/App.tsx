@@ -1,36 +1,26 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider, CssBaseline } from '@mui/material';
-import { theme } from './theme';
-import Navbar from './components/Navbar';
-import Home from './components/Home';
-import IPDetector from './components/IPDetector';
-import BulkAnalysis from './components/BulkAnalysis';
-import HistoryView from './components/HistoryView';
-import Login from './components/Auth/Login';
-import Register from './components/Auth/Register';
-import { AuthProvider } from './contexts/AuthContext';
-import './App.css';
+import { Box } from '@mui/material';
+import Navbar from './components/Navbar.tsx';
+import Home from './components/Home.tsx';
+import IPDetector from './components/IPDetector.tsx';
+import BulkAnalysis from './components/BulkAnalysis.tsx';
+import HistoryView from './components/HistoryView.tsx';
 
 function App() {
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <AuthProvider>
-        <Router>
-          <div className="App">
-            <Navbar />
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/detect" element={<IPDetector />} />
-              <Route path="/bulk" element={<BulkAnalysis />} />
-              <Route path="/history" element={<HistoryView />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-            </Routes>
-          </div>
-        </Router>
-      </AuthProvider>
-    </ThemeProvider>
+    <Router>
+      <Box>
+        <Navbar />
+        <Box sx={{ mt: 8 }}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/detect" element={<IPDetector />} />
+            <Route path="/bulk" element={<BulkAnalysis />} />
+            <Route path="/history" element={<HistoryView />} />
+          </Routes>
+        </Box>
+      </Box>
+    </Router>
   );
 }
 

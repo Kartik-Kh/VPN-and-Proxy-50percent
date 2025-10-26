@@ -95,8 +95,9 @@ const detectVPN = async (ip: string) => {
             score: fraudScore
           });
           
-          if (vpnDetected) score += 40;
-          score += Math.min(fraudScore / 2, 30);
+          // Reduced scoring for WIP version
+          if (vpnDetected) score += 25;
+          score += Math.min(fraudScore / 3, 15);
         }
       } catch (err: any) {
         console.log('IPQualityScore API error:', err.message);
@@ -125,8 +126,9 @@ const detectVPN = async (ip: string) => {
             score: abuseScore
           });
           
-          if (abuseScore > 75) score += 30;
-          else if (abuseScore > 50) score += 15;
+          // Reduced for development version
+          if (abuseScore > 75) score += 10;
+          else if (abuseScore > 50) score += 5;
         }
       } catch (err: any) {
         console.log('AbuseIPDB API error:', err.message);
@@ -153,7 +155,8 @@ const detectVPN = async (ip: string) => {
             location: `${ipinfoResponse.data.city || ''}, ${ipinfoResponse.data.country || ''}`
           });
           
-          if (isHosting) score += 20;
+          // Reduced for development version
+          if (isHosting) score += 8;
         }
       } catch (err: any) {
         console.log('IPInfo API error:', err.message);
@@ -176,7 +179,8 @@ const detectVPN = async (ip: string) => {
         details: `Matched ${vpnMatch.provider} IP range`,
         provider: vpnMatch.provider
       });
-      score += 50;
+      // Reduced for development version
+      score += 20;
     }
 
     // 5. Private IP check
@@ -205,8 +209,9 @@ const detectVPN = async (ip: string) => {
   // Ensure score is between 0-100
   score = Math.min(Math.max(score, 0), 100);
   
-  const verdict = score > 50 ? 'PROXY/VPN' : 'ORIGINAL';
-  const threatLevel = score > 75 ? 'HIGH' : score > 50 ? 'MEDIUM' : score > 25 ? 'LOW' : 'CLEAN';
+  // Lower threshold for development version
+  const verdict = score > 40 ? 'PROXY/VPN' : 'ORIGINAL';
+  const threatLevel = score > 60 ? 'HIGH' : score > 40 ? 'MEDIUM' : score > 20 ? 'LOW' : 'CLEAN';
 
   return {
     ip,

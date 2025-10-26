@@ -1,20 +1,18 @@
 import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
-import SearchIcon from '@mui/icons-material/Search';
-import StorageIcon from '@mui/icons-material/Storage';
-import HistoryIcon from '@mui/icons-material/History';
 
 const Navbar = () => {
   const navButtons = [
-    { path: '/', label: 'Detect', icon: <SearchIcon /> },
-    { path: '/bulk', label: 'Bulk Analysis', icon: <StorageIcon /> },
-    { path: '/history', label: 'History', icon: <HistoryIcon /> },
+    { path: '/', label: 'Home' },
+    { path: '/bulk', label: 'Bulk' },
+    { path: '/history', label: 'History' },
   ];
 
   return (
     <AppBar position="fixed" sx={{ 
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+      background: '#fff',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+      borderBottom: '1px solid #eee'
     }}>
       <Toolbar>
         <Typography
@@ -22,25 +20,26 @@ const Navbar = () => {
           component="div"
           sx={{
             flexGrow: 1,
-            fontWeight: 700,
-            color: '#ffffff',
-            letterSpacing: '0.05rem',
+            fontWeight: 400,
+            color: '#555',
+            fontSize: '1.1rem'
           }}
         >
           VPN Detector
         </Typography>
-        <Box sx={{ display: 'flex', gap: 2 }}>
+        <Box sx={{ display: 'flex', gap: 1 }}>
           {navButtons.map((btn) => (
             <Button
               key={btn.path}
               component={RouterLink}
               to={btn.path}
-              startIcon={btn.icon}
               sx={{
-                color: '#ffffff',
-                fontWeight: 500,
+                color: '#666',
+                fontWeight: 400,
+                fontSize: '0.9rem',
+                textTransform: 'none',
                 '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  backgroundColor: '#f5f5f5',
                 },
               }}
             >
