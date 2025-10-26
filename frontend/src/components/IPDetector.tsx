@@ -28,10 +28,43 @@ const IPDetector: React.FC = () => {
     try {
       const data = await vpnDetectionService.detectIP(ip);
       setResult(data);
+      
+      // Save to history in localStorage
+      saveToHistory(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const saveToHistory = (data: DetectionResult) => {
+    try {
+      const historyEntry = {
+        ip: data.ip,
+        verdict: data.verdict,
+        score: data.score,
+        threatLevel: data.threatLevel || 'UNKNOWN',
+        timestamp: data.timestamp,
+        cached: data.cached || false
+      };
+
+      // Get existing history
+      const stored = localStorage.getItem('vpn_detection_history');
+      let history = stored ? JSON.parse(stored) : [];
+
+      // Add new entry at the beginning
+      history.unshift(historyEntry);
+
+      // Keep only the last 100 entries
+      if (history.length > 100) {
+        history = history.slice(0, 100);
+      }
+
+      // Save back to localStorage
+      localStorage.setItem('vpn_detection_history', JSON.stringify(history));
+    } catch (error) {
+      console.error('Failed to save to history:', error);
     }
   };
 

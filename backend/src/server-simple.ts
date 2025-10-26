@@ -3,12 +3,34 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
+import mongoose from 'mongoose';
+import cacheService from './services/cache.service';
 
 // Routes
 import detectRouter from './routes/detect-simple';
+import historyRouter from './routes/history.routes';
 
 const app = express();
 const port = process.env.PORT || 5000;
+
+// Connect to MongoDB
+const connectMongoDB = async () => {
+  try {
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/vpn_detector';
+    await mongoose.connect(mongoUri);
+    console.log('✓ MongoDB connected successfully');
+  } catch (error) {
+    console.log('⚠ Starting without MongoDB:', error instanceof Error ? error.message : 'Unknown error');
+  }
+};
+
+// Connect to Redis (optional - continues without it if fails)
+cacheService.connect().catch(err => {
+  console.log('Starting without Redis cache');
+});
+
+// Connect to MongoDB
+connectMongoDB();
 
 // Security middleware
 app.use(helmet({
@@ -35,11 +57,14 @@ app.get('/health', (req, res) => {
     status: 'OK',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    redis: 'available',
   });
 });
 
 // API Routes
 app.use('/api/detect', detectRouter);
+app.use('/api/history', historyRouter);
 
 // 404 handler
 app.use((req, res) => {

@@ -2,6 +2,8 @@ import { Router, Request, Response } from 'express';
 import axios from 'axios';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import cacheService from '../services/cache.service';
+import Lookup from '../models/Lookup';
 
 const execAsync = promisify(exec);
 const router = Router();
@@ -245,8 +247,37 @@ const detectHandler = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Invalid IP address format' });
     }
 
+    // Check Redis cache first
+    const cacheKey = `detect:${ip}`;
+    const cachedResult = await cacheService.get(cacheKey);
+    
+    if (cachedResult) {
+      console.log(`✓ Cache HIT for ${ip}`);
+      return res.json({ ...cachedResult, cached: true });
+    }
+
+    console.log(`⚬ Cache MISS for ${ip} - fetching fresh data`);
     const result = await detectVPN(ip);
-    res.json(result);
+    
+    // Store in cache for 1 hour (3600 seconds)
+    await cacheService.set(cacheKey, result, 3600);
+    
+    // Save to MongoDB audit log
+    try {
+      await Lookup.create({
+        ip: result.ip,
+        verdict: result.verdict,
+        score: result.score,
+        whois: result.whois,
+        checks: result.checks,
+        timestamp: new Date(),
+      });
+      console.log(`✓ Saved lookup to MongoDB: ${ip}`);
+    } catch (dbError) {
+      console.log('MongoDB save skipped:', dbError instanceof Error ? dbError.message : 'Unknown error');
+    }
+    
+    res.json({ ...result, cached: false });
   } catch (err: any) {
     console.error('Detection error:', err);
     res.status(500).json({ 
@@ -259,4 +290,88 @@ const detectHandler = async (req: Request, res: Response) => {
 router.post('/', detectHandler);
 router.post('/single', detectHandler);
 
+// Bulk analysis endpoint
+router.post('/bulk', async (req: Request, res: Response) => {
+  try {
+    const { ips } = req.body;
+
+    if (!ips || !Array.isArray(ips) || ips.length === 0) {
+      return res.status(400).json({ error: 'IPs array is required' });
+    }
+
+    if (ips.length > 100) {
+      return res.status(400).json({ error: 'Maximum 100 IPs allowed per request' });
+    }
+
+    const ipRegex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
+    const validIps = ips.filter((ip: string) => ipRegex.test(ip.trim()));
+
+    if (validIps.length === 0) {
+      return res.status(400).json({ error: 'No valid IP addresses found' });
+    }
+
+    console.log(`Processing bulk request for ${validIps.length} IPs...`);
+
+    // Process all IPs
+    const results = [];
+    for (const ip of validIps) {
+      try {
+        // Check cache first
+        const cacheKey = `detect:${ip.trim()}`;
+        let result = await cacheService.get(cacheKey);
+        
+        if (!result) {
+          result = await detectVPN(ip.trim());
+          await cacheService.set(cacheKey, result, 3600);
+          
+          // Save to MongoDB
+          try {
+            await Lookup.create({
+              ip: result.ip,
+              verdict: result.verdict,
+              score: result.score,
+              whois: result.whois,
+              checks: result.checks,
+              timestamp: new Date(),
+            });
+          } catch (dbError) {
+            console.log('MongoDB save skipped for', ip);
+          }
+        }
+        
+        results.push(result);
+      } catch (error) {
+        results.push({
+          ip: ip.trim(),
+          error: 'Detection failed',
+          verdict: 'ERROR',
+          score: 0,
+          threatLevel: 'UNKNOWN'
+        });
+      }
+    }
+
+    // Calculate summary
+    const summary = {
+      clean: results.filter((r: any) => r.score < 20).length,
+      suspicious: results.filter((r: any) => r.score >= 20 && r.score < 40).length,
+      vpn: results.filter((r: any) => r.score >= 40).length
+    };
+
+    res.json({
+      total: ips.length,
+      processed: validIps.length,
+      results,
+      summary
+    });
+  } catch (error: any) {
+    console.error('Bulk detection error:', error);
+    res.status(500).json({
+      error: 'Bulk detection failed',
+      message: error.message
+    });
+  }
+});
+
 export default router;
+export { detectVPN };
