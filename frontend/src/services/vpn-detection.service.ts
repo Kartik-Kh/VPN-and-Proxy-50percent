@@ -16,6 +16,7 @@ export interface DetectionResult {
   }>;
   whois?: any;
   timestamp: string;
+  cached?: boolean;
   analysis: {
     isProxy: boolean;
     isVPN: boolean;

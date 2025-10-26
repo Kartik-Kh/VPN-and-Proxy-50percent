@@ -15,7 +15,6 @@ import {
   TextField,
   MenuItem,
   Stack,
-  IconButton,
   Tooltip
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
