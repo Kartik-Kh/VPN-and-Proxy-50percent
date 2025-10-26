@@ -68,7 +68,7 @@ jobs:
         run: npm test || echo "Tests not yet configured"
 
       - name: Upload backend build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: backend-dist
           path: backend/dist
@@ -107,7 +107,7 @@ jobs:
         run: npm run build
 
       - name: Upload frontend build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: frontend-dist
           path: frontend/dist
